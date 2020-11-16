@@ -1,6 +1,6 @@
-pname = 'angs';
-pname_sim = './sim_data';
-pname_al = './angs/Al';
+pname = '../data/angs';
+pname_sim = '../data/sim_data';
+pname_al = '../data/angs/Al';
 CS_copper = {... 
       'notIndexed',...
       crystalSymmetry('432', [3.6 3.6 3.6], 'mineral', 'Copper', 'color', [0.53 0.81 0.98])};
@@ -21,6 +21,7 @@ stepSizeAl = [0.800000 0.692820];
 targetStepSizeAl = 0.20;
 targetStepSize = 0.20;
 targetStepSizeSim = 0.025;
+tgtStpSz = [targetStepSize targetStepSize];
 fname1 = [pname '\300.3.ang'];
 fname2 = [pname '\300.9.ang'];
 fname3 = [pname '\600.3.ang'];
@@ -49,54 +50,54 @@ angleSim2 = plot_euler(fname_sim2, CS_sim, stepSizeSim, targetStepSizeSim, 'sim2
 angleSim3 = plot_euler(fname_sim3, CS_sim, stepSizeSim, targetStepSizeSim, 'sim3.png', 'sim3.ctf');
 
 %%
-img = imread("full_range_large/200.3.png");
+img = imread("../data/full_range_large/200.3.png");
 cropped = randomCrop(img, 448);
-imwrite(cropped, 'small/200.3_full.png')
+imwrite(cropped, '../data/small/200.3_full.png')
 
-img = imread("full_range_large/300.3.png");
+img = imread("../data/full_range_large/300.3.png");
 cropped = randomCrop(img, 448);
-imwrite(cropped, 'small/300.3_full.png');
+imwrite(cropped, '../data/small/300.3_full.png');
 
-img = imread("full_range_large/300.9.png");
+img = imread("../data/full_range_large/300.9.png");
 cropped = randomCrop(img, 448);
-imwrite(cropped, 'small/300.9_full.png');
+imwrite(cropped, '../data/small/300.9_full.png');
 
-img = imread("full_range_large/600.3.png");
+img = imread("../data/full_range_large/600.3.png");
 cropped = randomCrop(img, 448);
-imwrite(cropped, 'small/600.3_full.png');
+imwrite(cropped, '../data/small/600.3_full.png');
 
-img = imread("full_range_large/600.3_Al.png");
+img = imread("../data/full_range_large/600.3_Al.png");
 cropped = randomCrop(img, 448);
-imwrite(cropped, 'small/600.3_Al_full.png');
+imwrite(cropped, '../data/small/600.3_Al_full.png');
 
-img = imread("full_range_large/600.9.png");
+img = imread("../data/full_range_large/600.9.png");
 cropped = randomCrop(img, 448);
-imwrite(cropped, 'small/600.9.png');
+imwrite(cropped, '../data/small/600.9.png');
 
 %%
-img = imread("large/200.3.png");
+img = imread("../data/large/200.3.png");
 cropped = randomCrop(img, 448);
-imwrite(cropped, 'small/200.3.png')
+imwrite(cropped, '../data/small/200.3.png')
 
-img = imread("large/300.3.png");
+img = imread("../data/large/300.3.png");
 cropped = randomCrop(img, 448);
-imwrite(cropped, 'small/300.3.png');
+imwrite(cropped, '../data/small/300.3.png');
 
-img = imread("large/300.9.png");
+img = imread("../data/large/300.9.png");
 cropped = randomCrop(img, 448);
-imwrite(cropped, 'small/300.9.png');
+imwrite(cropped, '../data/small/300.9.png');
 
-img = imread("large/600.3.png");
+img = imread("../data/large/600.3.png");
 cropped = randomCrop(img, 448);
-imwrite(cropped, 'small/600.3.png');
+imwrite(cropped, '../data/small/600.3.png');
 
-img = imread("large/600.3_Al.png");
+img = imread("../data/large/600.3_Al.png");
 cropped = randomCrop(img, 448);
-imwrite(cropped, 'small/600.3_Al.png');
+imwrite(cropped, '../data/small/600.3_Al.png');
 
-img = imread("large/600.9.png");
+img = imread("../data/large/600.9.png");
 cropped = randomCrop(img, 448);
-imwrite(cropped, 'small/600.9.png');
+imwrite(cropped, '../data/small/600.9.png');
 
 %%
 img = imread('small/200.3_filled.png');
@@ -146,43 +147,43 @@ RGB_EBSD_Analysis(angleSim1, CS_copper, stepSizeSim);
 % plot_to_EBSD(regen, CS_copper, stepSizeSim);
 
 %%
-tgtStpSz = [targetStepSize targetStepSize];
+
 %%
-img = imread('./small/300.3_filled_small.png');
+img = imread('../data/small/300.3_full.png');
 RGB_EBSD_Analysis(img, CS_copper, tgtStpSz);
 %%
-regen = imread('./result/300.3.png');
+regen = imread('../data/result/300.3_ful_hr.png');
 RGB_EBSD_Analysis(regen, CS_copper, tgtStpSz);
 %%
-regen = imread('./result/300.3_cleaned.png');
+regen = imread('../data/result/300.3_full_cleaned.png');
 RGB_EBSD_Analysis(regen, CS_copper, tgtStpSz);
 %%
-img = imread('./small/200.3_filled.png');
+img = imread('../data/small/200.3_full.png');
 RGB_EBSD_Analysis(img, CS_al, tgtStpSz);
 %%
-regen = imread('./result/al2003_filled_regen.png');
+regen = imread('../data/result/200.3_full.png');
 RGB_EBSD_Analysis(regen, CS_al, tgtStpSz);
 
 %%
-regen = imread('./result/al2003_filled_regen_cleaned.png');
+regen = imread('../data/result/200.3_full_cleaned.png');
 RGB_EBSD_Analysis(regen, CS_al, tgtStpSz);
 
 %%
-img = imread('./small/600.3_AlFilled.png');
+img = imread('../data/small/600.3_Al_full.png');
 RGB_EBSD_Analysis(img, CS_al, tgtStpSz);
 %%
-regen = imread('./result/al6003_filled_regen.png');
+regen = imread('../data/result/600.3_Al_full_hr.png');
 RGB_EBSD_Analysis(regen, CS_al, tgtStpSz);
 %%
-regen = imread('./result/al6003_filled_regen_cleaned.png');
+regen = imread('../data/result/600.3_Al_full_cleaned.png');
 RGB_EBSD_Analysis(regen, CS_al, tgtStpSz);
 
 %%
-img = imread('./small/sim1.png');
+img = imread('../data/small/sim1_full.png');
 RGB_EBSD_Analysis(img, CS_sim, tgtStpSz);
 %%
-regen = imread('./result/sim_tv.png');
+regen = imread('../data/result/sim1_full_hr.png');
 RGB_EBSD_Analysis(regen, CS_sim, tgtStpSz);
 %%
-regen = imread('./result/sim_tv_cleaned.png');
+regen = imread('../data/result/sim1_full_cleaned.png');
 RGB_EBSD_Analysis(regen, CS_sim, tgtStpSz);

@@ -7,7 +7,7 @@ function ebsd = image2EBSD(img, stepSize, CS)
     phase1 = find(oneDangles(:, 1));
     idx = find(oneDangles(:, 1));
     oneDangles(idx, 1) = oneDangles(idx, 1) / 255 * (pi * 2);
-    oneDangles(idx, 2) = oneDangles(idx, 2) / 255 * (pi * 2);
+    oneDangles(idx, 2) = oneDangles(idx, 2) / 255 * (pi);
     oneDangles(idx, 3) = oneDangles(idx, 3) / 255 * (pi * 2);
 
     

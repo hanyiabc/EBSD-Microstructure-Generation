@@ -4,7 +4,7 @@ function ebsd = RGB_EBSD_Analysis(angles, CS, stepSize)
     UNIFIED_COLOR_RANGE = [0 5];
     UNIFIED_COLOR_RANGE_PF = [0 2];
     
-    image2EBSD(angles, stepSize, CS);
+    ebsd = image2EBSD(angles, stepSize, CS);
     ebsdS = ebsd;
     
     ipfKey = ipfColorKey(ebsdS('indexed'));
@@ -30,12 +30,14 @@ function ebsd = RGB_EBSD_Analysis(angles, CS, stepSize)
 %     psi = calcKernel(grains('indexed').meanOrientation);
 %     odfGrain = calcDensity(ebsd('indexed').orientations,'kernel',psi);
     figure
-    plotSection(odf, 'colorrange', UNIFIED_COLOR_RANGE);
+    plotSection(odf);
+%     plotSection(odf, 'colorrange', UNIFIED_COLOR_RANGE);
     mtexColorbar
     
     figure
     h = [Miller(1,0,0,odf.CS),Miller(1,1,0,odf.CS),Miller(1,1,1,odf.CS)];
-    plotPDF(odf,h,'antipodal','silent', 'colorrange', UNIFIED_COLOR_RANGE_PF);
+    plotPDF(odf,h,'antipodal','silent');
+%     plotPDF(odf,h,'antipodal','silent', 'colorrange', UNIFIED_COLOR_RANGE_PF);
     mtexColorbar;
 end
 

@@ -3,10 +3,16 @@ import numpy as np
 from skimage.color import label2rgb
 import random
 import matplotlib.pyplot as plt
-
-FILE_NAME = 'result/300.3.png'
-
-
+from skimage.exposure import match_histograms
+import argparse
+import os
+def readImages(filenames):
+    imgs = []
+    for file in filenames:
+        img = cv2.imread(file)
+        print(img.shape)
+        imgs.append(img)
+    return np.stack(imgs, axis=0)
 def skeletonize(img):
     size = np.size(img)
     skel = np.zeros(img.shape,np.uint8)
@@ -68,7 +74,7 @@ def mergeSmallArea(img, skel, thArea, thDist):
                 l2dist = cv2.norm(np.array(mean) - np.array(meanParent))
                 # TODO: Merge small area
 
-                print("L2 Distance: ", l2dist)
+                # print("L2 Distance: ", l2dist)
 
 def visualizeDetectedGrains(cc):
     numLabels = cc[0]
@@ -114,9 +120,14 @@ def grainSizeHist(img, minn, maxx, nbins):
         y[i] = np.sum(percentArea[labelsHist==i])
         
     return (hist, y, bins)
-
-def segmentation(filename):
+def histmatch(source,target):
+    result = match_histograms(source, target, multichannel=True)
+    
+def segmentation(filename, origFileName):
     regenImg = cv2.imread(filename)
+    origImg = cv2.imread(origFileName)
+    result = histmatch(regenImg, origImg)
+    
 
     # gau_blurred = cv2.GaussianBlur(regenImg, (3, 3), 1.5)
     # sharpened = cv2.addWeighted(regenImg, 1.5, gau_blurred, -0.5, 0)
@@ -153,31 +164,48 @@ def segmentation(filename):
 
     cc = cv2.connectedComponentsWithStats(inv, connectivity=4, stats=cv2.CC_STAT_AREA)
     cleanedGrains = cleanUpGrains(cc, regenImg)
+    return cleanedGrains
     cv2.imwrite("cleaned.png", cleanedGrains)
 
     # cv2.imshow("Processed", processed)
     # cv2.imshow("Magnitude", rescaledMag)
     # cv2.imshow("Magnitude Gray Rescaled", rescaledMagGray)
-    cv2.imshow("Threshold", threshImg)
-    cv2.imshow("Inverted Threshold", invThresh)
+    # cv2.imshow("Threshold", threshImg)
+    # cv2.imshow("Inverted Threshold", invThresh)
 
-    cv2.imshow("Filtered Skeletonized", skel)
-    cv2.imshow("Visualize", vis)
-    cv2.imshow("Inverted", inv)
-    cv2.imshow("Debranched", deBranched)
+    # cv2.imshow("Filtered Skeletonized", skel)
+    # cv2.imshow("Visualize", vis)
+    # cv2.imshow("Inverted", inv)
+    # cv2.imshow("Debranched", deBranched)
 
 
-    cv2.imwrite("skel.png", skel)
-    cv2.imwrite("inv.png", inv)
-    cv2.imwrite("vis.png", vis)
-    cv2.imwrite("boundary.png", boundary)
-
+    # cv2.imwrite("skel.png", skel)
+    # cv2.imwrite("inv.png", inv)
+    # cv2.imwrite("vis.png", vis)
+    # cv2.imwrite("boundary.png", boundary)
     (count, area, edges) = grainSizeHist(inv, 0, 4000, 40)
-    cv2.waitKey(0)
+    # cv2.waitKey(0)
     plt.figure()
     plt.bar(edges, area, width=80, align='edge')
     plt.ylim(0, 0.15)
     plt.show()
 
+if __name__ == '__main__':
 
-segmentation(FILE_NAME)
+    parser = argparse.ArgumentParser(description='Texture Synthesis witn CNN.')
+    parser.add_argument('--generation_input', '-i', type=str, nargs='+', help='Path(s) to the generated image.')
+    parser.add_argument('--source_dir', '-d', type=str, help='Path(s) to the directory of the source images.')
+    parser.add_argument('--output_dir', '-o', type=str, help='Output path.')
+    args = parser.parse_args()
+
+    generation_input = args.generation_input
+    output_dir = args.output_dir
+    source_dir = args.source_dir
+
+    for imgPath in generation_input:
+        baseName = os.path.basename(imgPath)
+        savePath = os.path.join(output_dir, baseName)
+        sourcePath = os.path.join(source_dir, baseName)
+        cleaned = segmentation(imgPath, sourcePath)
+        cv2.imwrite(savePath, cleaned)
+        

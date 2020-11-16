@@ -4,6 +4,6 @@ function out = randomCrop(img, sz)
     
     row = randi(nrow - sz);
     col = randi(ncol - sz);
-    
+    sz = sz - 1;
     out = imcrop(img, [col row sz sz]);
 end
