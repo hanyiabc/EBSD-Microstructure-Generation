@@ -58,23 +58,33 @@ img: original image,
 skel: skeletonized image 
 """
 def mergeSmallArea(img, skel, thArea, thDist):
-    __, contours, hierarchy = cv2.findContours(skel, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    contours, hierarchy = cv2.findContours(skel, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    newcon = contours[0:2]
+    
     for i in range(len(contours)):
         area = cv2.contourArea(contours[i])
+        newcon.append(contours[i])
         if area < thArea:
             parentIdx = hierarchy[0][i, 3]
             if parentIdx != -1:
+                newcon.pop(-1)
+                """
                 maskParent = np.zeros(skel.shape, dtype=np.uint8)
                 mask = np.zeros(skel.shape, dtype=np.uint8)
                 cv2.drawContours(maskParent, contours, parentIdx, 255, 1)
                 cv2.drawContours(mask, contours, i, 255, 1)
-
                 mean = cv2.mean(img, mask)
                 meanParent = cv2.mean(img, maskParent)
                 l2dist = cv2.norm(np.array(mean) - np.array(meanParent))
                 # TODO: Merge small area
 
                 # print("L2 Distance: ", l2dist)
+                """
+    newone = np.zeros(skel.shape, dtype=np.uint8)
+    cv2.drawContours(newone, newcon, -1, 255, 1)
+    cv2.imshow('notmerged',skel)
+    cv2.imshow('merged',newone)
+    return newone
 
 def visualizeDetectedGrains(cc):
     numLabels = cc[0]
@@ -153,7 +163,7 @@ def segmentation(filename, origFileName):
     filterByArea(skel, 200)
 
     deBranched = deBranch(skel)
-    mergeSmallArea(processed, skel, 50, 50)
+    mergeSmallArea(processed, skel, 300, 50)
 
     inv = cv2.bitwise_not(deBranched)
     skel3Ch = cv2.cvtColor(deBranched, cv2.COLOR_GRAY2BGR)
@@ -201,11 +211,11 @@ if __name__ == '__main__':
     generation_input = args.generation_input
     output_dir = args.output_dir
     source_dir = args.source_dir
-
+    cleaned = segmentation(imgPath, sourcePath)
     for imgPath in generation_input:
         baseName = os.path.basename(imgPath)
         savePath = os.path.join(output_dir, baseName)
         sourcePath = os.path.join(source_dir, baseName)
-        cleaned = segmentation(imgPath, sourcePath)
+        #cleaned = segmentation(imgPath, sourcePath)
         cv2.imwrite(savePath, cleaned)
         
