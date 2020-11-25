@@ -37,6 +37,7 @@ fname_al6003 = [pname_al '\600.3 cleaned.ang'];
 setMTEXpref('xAxisDirection','north');
 setMTEXpref('zAxisDirection','outOfPlane');
 %%
+% generate rgb images from EBSD orientations
 angleM4 = plot_euler(fname1, CS_copper, stepSizeM4, targetStepSize, '300.3.png', '300.3.ctf');
 angleM1 = plot_euler(fname2, CS_copper, stepSizeM1, targetStepSize, '300.9.png', '300.9.ctf');
 angleM2 = plot_euler(fname3, CS_copper, stepSizeM2, targetStepSize, '600.3.png', '600.3.ctf');
@@ -50,6 +51,7 @@ angleSim2 = plot_euler(fname_sim2, CS_sim, stepSizeSim, targetStepSizeSim, 'sim2
 angleSim3 = plot_euler(fname_sim3, CS_sim, stepSizeSim, targetStepSizeSim, 'sim3.png', 'sim3.ctf');
 
 %%
+%Crop generated rgb images randomly (full range)
 img = imread("../data/full_range_large/200.3.png");
 cropped = randomCrop(img, 448);
 imwrite(cropped, '../data/small/200.3_full.png')
@@ -75,6 +77,7 @@ cropped = randomCrop(img, 448);
 imwrite(cropped, '../data/small/600.9.png');
 
 %%
+%Crop generated rgb images randomly
 img = imread("../data/large/200.3.png");
 cropped = randomCrop(img, 448);
 imwrite(cropped, '../data/small/200.3.png')
@@ -100,7 +103,8 @@ cropped = randomCrop(img, 448);
 imwrite(cropped, '../data/small/600.9.png');
 
 %%
-img = imread('small/200.3_filled.png');
+%convert small images to ctf files
+img = imread('small/200.3.png');
 ebsd = image2EBSD(img, [targetStepSize * 2, targetStepSize * 2], CS_al);
 ebsdImg.export('200.3_filled.ctf');
 
@@ -111,7 +115,8 @@ ebsdImg.export('300.3_filled_small.ctf');
 img = imread('small/600.3_AlFilled.png');
 ebsd = image2EBSD(img, [targetStepSize * 2, targetStepSize * 2], CS_al);
 ebsdImg.export('600.3_AlFilled.ctf');
-%%
+
+
 img = imread('small/300.9.png');
 ebsd = image2EBSD(img, [targetStepSize * 2, targetStepSize * 2], CS_al);
 ebsdImg.export('300.9.ctf');
@@ -125,37 +130,13 @@ ebsd = image2EBSD(img, [targetStepSize * 2, targetStepSize * 2], CS_al);
 ebsdImg.export('cu600.3.ctf');
 
 %%
-RGB_EBSD_Analysis(angleM4, CS_copper, stepSizeM4);
-% plot_to_EBSD(angleM1, CS_copper, stepSizeM1);
-% plot_to_EBSD(angleM2, CS_copper, stepSizeM2);
-% plot_to_EBSD(angleM3, CS_copper, stepSizeM3);
-%%
-RGB_EBSD_Analysis(angleSim1, CS_copper, stepSizeSim);
-% plot_to_EBSD(angleSim2, CS_copper, stepSizeSim);
-% plot_to_EBSD(angleSim3, CS_copper, stepSizeSim);
-%%
-% img = imread('300.3.png');
-% plot_to_EBSD(img, CS_copper, stepSizeM4);
-% 
-% %%
-% regen = imread('13.png');
-% plot_to_EBSD(regen, CS_copper, stepSizeM4);
-% regen = imread('1999.png');
-% plot_to_EBSD(regen, CS_copper, stepSizeM4);
-% %%
-% regen = imread('1999_sim.png');
-% plot_to_EBSD(regen, CS_copper, stepSizeSim);
-
-%%
-
-%%
 img = imread('../data/small/300.3_full.png');
 RGB_EBSD_Analysis(img, CS_copper, tgtStpSz);
 %%
-regen = imread('../data/result/300.3_ful_hr.png');
+regen = imread('../data/result/300.3_full.png');
 RGB_EBSD_Analysis(regen, CS_copper, tgtStpSz);
 %%
-regen = imread('../data/result/300.3_full_cleaned.png');
+regen = imread('../data/result/cleaned/300.3_full.png');
 RGB_EBSD_Analysis(regen, CS_copper, tgtStpSz);
 %%
 img = imread('../data/small/200.3_full.png');
@@ -165,24 +146,24 @@ regen = imread('../data/result/200.3_full.png');
 RGB_EBSD_Analysis(regen, CS_al, tgtStpSz);
 
 %%
-regen = imread('../data/result/200.3_full_cleaned.png');
+regen = imread('../data/result/cleaned/200.3_full.png');
 RGB_EBSD_Analysis(regen, CS_al, tgtStpSz);
 
 %%
 img = imread('../data/small/600.3_Al_full.png');
 RGB_EBSD_Analysis(img, CS_al, tgtStpSz);
 %%
-regen = imread('../data/result/600.3_Al_full_hr.png');
+regen = imread('../data/result/600.3_Al_full.png');
 RGB_EBSD_Analysis(regen, CS_al, tgtStpSz);
 %%
-regen = imread('../data/result/600.3_Al_full_cleaned.png');
+regen = imread('../data/result/cleaned/600.3_Al_full.png');
 RGB_EBSD_Analysis(regen, CS_al, tgtStpSz);
 
 %%
 img = imread('../data/small/sim1_full.png');
 RGB_EBSD_Analysis(img, CS_sim, tgtStpSz);
 %%
-regen = imread('../data/result/sim1_full_hr.png');
+regen = imread('../data/result/sim1_full.png');
 RGB_EBSD_Analysis(regen, CS_sim, tgtStpSz);
 %%
 regen = imread('../data/result/sim1_full_cleaned.png');

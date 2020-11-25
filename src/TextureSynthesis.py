@@ -20,7 +20,6 @@ def readImages(filenames):
     imgs = []
     for file in filenames:
         img = imread(file)
-        print(img.shape)
         imgs.append(img)
     return np.stack(imgs, axis=0)
 
@@ -104,7 +103,6 @@ def histogram_loss_2(x, generated):
     histGGen /= K.sum(histGGen)
     histRGen /= K.sum(histRGen)
 
-
     lossB = keras.losses.mean_squared_error(histB, histBGen)
     lossG = keras.losses.mean_squared_error(histG, histGGen)
     lossR = keras.losses.mean_squared_error(histR, histRGen)
@@ -112,7 +110,6 @@ def histogram_loss_2(x, generated):
     total = (lossB + lossG + lossR) / 3
 
     # histLossTotal = K.sum(K.square(histR - histRGen)) + K.sum(K.square(histG - histGGen)) + K.sum(K.square(histB - histBGen))
-    # print(histLossTotal.shape)
     return total
 
 class TextureSynthesis:
@@ -123,7 +120,9 @@ class TextureSynthesis:
         loss_value = outs[0]
         grad_values = outs[1].flatten().astype('float64')
         hist_loss = outs[2]
-        print("Histogram Loss: ", hist_loss)
+        # grad_hist = outs[3]
+        # print(grad_hist)
+        # print("Histogram Loss: ", hist_loss)
         return loss_value, grad_values
 
     def __init__(self, H=448, W=448, C=3, S_weight=1.0, V_weight = 1.0, H_weight = 1.0, style_path=None, style_gram_mat=None, style_image=None, vgg19=None):
@@ -188,9 +187,11 @@ class TextureSynthesis:
             self.loss += hist_loss
             self.hist_loss = hist_loss
             grads = K.gradients(self.loss, x0)
+            # hsit_grad = K.gradients(self.hist_loss, x0)
             outputs = [self.loss]
             outputs += grads
             outputs += [self.hist_loss]
+            # outputs += hsit_grad
             self.f_outputs = K.function([x0], outputs)
     
 
