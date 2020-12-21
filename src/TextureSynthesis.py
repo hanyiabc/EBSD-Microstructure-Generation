@@ -59,6 +59,46 @@ def total_variation_loss(x, H, W):
     b = K.square(x[:, :H-1, :W-1, :] - x[:, :H-1, 1:, :])
     return K.sum(K.pow(a + b, 1.25))
 
+def emd(true, pred):
+    return K.sum(K.square(true - pred))
+# def mi(true, pred):
+
+def offset_range(x):
+    ret = x + K.variable([103.939, 116.779, 123.68])
+    return ret
+    
+
+def deep_hist_loss(source, target, n_ch, w_emd, w_mi, nbins, rangee, bandwidth):
+
+    source = offset_range(source)
+    target = offset_range(target)
+
+    loss = K.variable(0)
+    for i in range(n_ch):
+        source_1ch = K.flatten(source[:, :, i])
+        target_1ch = K.flatten(target[:, :, i])
+        hist_source = histogram_deep_hist(source_1ch, nbins, rangee, bandwidth)
+        hist_target = histogram_deep_hist(target_1ch, nbins, rangee, bandwidth)
+
+        loss = loss + emd(hist_source, hist_target) / 3
+    return loss, source_1ch, target_1ch
+        
+
+def histogram_deep_hist(data, nbins, rangee, bandwidth):
+    histogram = K.variable(np.zeros((nbins, 1)))
+    binNum = K.arange(nbins, dtype='float32')
+    binLenth = (rangee[1] - rangee[0]) / nbins
+    histogram = K.map_fn(deep_hist_bin_density(data, binLenth, rangee[0], bandwidth), binNum)
+    return histogram
+
+def deep_hist_bin_density(data, L, minn, b):
+    def fn(k):
+        left = k * L + minn
+        right = (k + 1) * L + minn
+        return K.sum(K.sigmoid((data - left) / b) - K.sigmoid( (data - right) / b)) / K.cast(K.size(data), dtype='float32')
+    return fn
+    
+
 def histogram_loss(style, target):
     edges = np.linspace(-200, 200, 10, endpoint=True)
     # edges = edges.tolist()
@@ -120,9 +160,11 @@ class TextureSynthesis:
         loss_value = outs[0]
         grad_values = outs[1].flatten().astype('float64')
         hist_loss = outs[2]
-        # grad_hist = outs[3]
-        # print(grad_hist)
-        # print("Histogram Loss: ", hist_loss)
+        hist = outs[3]
+
+        print("Histogram Loss: ", hist_loss)
+        print("Histogram: ", hist)
+
         return loss_value, grad_values
 
     def __init__(self, H=448, W=448, C=3, S_weight=1.0, V_weight = 1.0, H_weight = 1.0, style_path=None, style_gram_mat=None, style_image=None, vgg19=None):
@@ -183,15 +225,14 @@ class TextureSynthesis:
                 sl = style_loss(style_features, combination_features, H * W)
                 self.loss += (S_weight / len(feature_layers)) * sl
             self.loss = self.loss + V_weight * total_variation_loss(x0, H, W)
-            hist_loss = H_weight * histogram_loss_2(self.style_image, x0)
-            self.loss += hist_loss
-            self.hist_loss = hist_loss
+            hist_loss, source_1ch, target_1ch =  deep_hist_loss(x0, self.style_image, 3, 1.0, 1.0, 256, [0.0, 255.0], 0.1)
+            hist_loss = H_weight * hist_loss
+            self.loss = self.loss + hist_loss
             grads = K.gradients(self.loss, x0)
-            # hsit_grad = K.gradients(self.hist_loss, x0)
             outputs = [self.loss]
             outputs += grads
-            outputs += [self.hist_loss]
-            # outputs += hsit_grad
+            outputs += [hist_loss]
+            outputs += [source_1ch]
             self.f_outputs = K.function([x0], outputs)
     
 
@@ -276,7 +317,7 @@ if __name__ == '__main__':
     parser.add_argument('--output_dir', '-o', type=str, help='Output path.')
     parser.add_argument('--style_weight', '-sw', type=float, default=1.0, help='Style weight.')
     parser.add_argument('--tv_weight', '-tw', type=float, default=0.05, help='TV MIN weight.')
-    parser.add_argument('--hist_weight', '-hw', type=float, default=1e3, help='Histogram weight.')
+    parser.add_argument('--hist_weight', '-hw', type=float, default=1.0e9, help='Histogram weight.')
     parser.add_argument('--num_iter', '-n', type=int, default=40, help='Number of iterations.')
 
     args = parser.parse_args()

@@ -58,7 +58,7 @@ img: original image,
 skel: skeletonized image 
 """
 def mergeSmallArea(img, skel, thArea, thDist):
-    contours, hierarchy = cv2.findContours(skel, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    __, contours, hierarchy = cv2.findContours(skel, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     newcon = contours[0:2]
     
     for i in range(len(contours)):
@@ -82,8 +82,8 @@ def mergeSmallArea(img, skel, thArea, thDist):
                 """
     newone = np.zeros(skel.shape, dtype=np.uint8)
     cv2.drawContours(newone, newcon, -1, 255, 1)
-    cv2.imshow('notmerged',skel)
-    cv2.imshow('merged',newone)
+    # cv2.imshow('notmerged',skel)
+    # cv2.imshow('merged',newone)
     return newone
 
 def visualizeDetectedGrains(cc):
@@ -138,7 +138,6 @@ def segmentation(filename, origFileName):
     origImg = cv2.imread(origFileName)
     result = histmatch(regenImg, origImg)
     
-
     # gau_blurred = cv2.GaussianBlur(regenImg, (3, 3), 1.5)
     # sharpened = cv2.addWeighted(regenImg, 1.5, gau_blurred, -0.5, 0)
     # TODO: Add histogram matching
@@ -203,19 +202,19 @@ def segmentation(filename, origFileName):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Texture Synthesis witn CNN.')
-    parser.add_argument('--generation_input', '-i', type=str, nargs='+', help='Path(s) to the generated image.')
-    parser.add_argument('--source_dir', '-d', type=str, help='Path(s) to the directory of the source images.')
-    parser.add_argument('--output_dir', '-o', type=str, help='Output path.')
+    parser.add_argument('--generation_input', '-i', required=True, type=str, nargs='+', help='Path(s) to the generated image.')
+    parser.add_argument('--source_dir', '-d', required=True, type=str, help='Path(s) to the directory of the source images.')
+    parser.add_argument('--output_dir', '-o', required=True, type=str, help='Output path.')
     args = parser.parse_args()
 
     generation_input = args.generation_input
     output_dir = args.output_dir
     source_dir = args.source_dir
-    cleaned = segmentation(imgPath, sourcePath)
+    # cleaned = segmentation(imgPath, sourcePath)
     for imgPath in generation_input:
         baseName = os.path.basename(imgPath)
         savePath = os.path.join(output_dir, baseName)
         sourcePath = os.path.join(source_dir, baseName)
-        #cleaned = segmentation(imgPath, sourcePath)
+        cleaned = segmentation(imgPath, sourcePath)
         cv2.imwrite(savePath, cleaned)
         
