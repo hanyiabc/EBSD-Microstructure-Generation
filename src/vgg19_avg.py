@@ -8,19 +8,22 @@
 """
 
 import os
-import keras
-from keras import layers
-from keras import models
-from keras import utils
+import tensorflow.keras
+import tensorflow as tf
+from tensorflow.keras import layers
+from tensorflow.keras import models
+from tensorflow.keras import utils
 
 WEIGHTS_PATH_NO_TOP = ('https://github.com/fchollet/deep-learning-models/'
                        'releases/download/v0.1/'
                        'vgg19_weights_tf_dim_ordering_tf_kernels_notop.h5')
 WEIGHT_PATH = "data/weights/vgg19_norm.h5"
 
-def build_VGG19_avg(input_tensor):
-
-    img_input = layers.Input(tensor=input_tensor)
+def build_VGG19_avg(input_tensor=None, input_shape=None):
+    if input_tensor is None:
+        img_input = layers.Input(shape=input_shape)
+    else:
+        img_input = layers.Input(tensor=input_tensor)
 
     x = layers.Conv2D(64, (3, 3),
                       activation='relu',
@@ -99,13 +102,17 @@ def build_VGG19_avg(input_tensor):
                       padding='same',
                       name='block5_conv4')(x)
     x = layers.AveragePooling2D((2, 2), strides=(2, 2), name='block5_pool')(x)
-    model = models.Model(input_tensor, x, name='vgg19')
+    model = models.Model(img_input, x, name='vgg19')
 
     weights_path = utils.get_file(
         'vgg19_weights_tf_dim_ordering_tf_kernels_notop.h5',
         WEIGHTS_PATH_NO_TOP,
         cache_subdir='models',
         file_hash='253f8cb515780f3b799900260a226db6')
+    # weights_path = WEIGHT_PATH
     model.load_weights(weights_path)
-
+    # tf.keras.utils.plot_model(model, to_file='./data/figures/vgg19_avg.svg')
     return model
+
+if __name__ == '__main__':
+    build_VGG19_avg(input_shape=(448, 448, 3))

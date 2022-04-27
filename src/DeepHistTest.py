@@ -35,7 +35,7 @@ def sk_hist_3ch(img, n_ch):
 
     for i in range(n_ch):
         img_1ch = img[:, :, i].flatten()
-        hist, __ = skimage.exposure.histogram(img, normalize=True)
+        hist, __ = skimage.exposure.histogram(img_1ch, nbins=256, normalize=True)
         hist_3ch.append(hist)
     return hist_3ch
 
@@ -49,15 +49,16 @@ def histogram_deep_hist(data, nbins, rangee, bandwidth):
     histogram = vfunc(binNum)
     return histogram
 
-def deep_hist_bin_density(data, L, minn, b):
+
+def deep_hist_bin_density(activations, L, minn, b):
     def fn(k):
         left = k * L + minn
         right = (k + 1) * L + minn
-        return np.sum(sigmoid((data - left) / b) - sigmoid( (data - right) / b)) / data.shape[0]
+        return np.sum(sigmoid((activations - left) / b) - sigmoid( (activations - right) / b)) / activations.shape[0]
     return fn
 
 def plot_3ch_hist(hist, nbins):
-    fig,a =  plt.subplots(3)
+    fig,a =  plt.subplots(3, figsize=(12, 6), dpi=150)
     
     binNum = np.arange(nbins, dtype='float32')
     a[0].bar(binNum, hist[0])
@@ -68,16 +69,13 @@ def plot_3ch_hist(hist, nbins):
     a[2].set_ylim((0, 0.015))
     plt.show()
 if __name__ == '__main__':
-    H = 448
-    W = 448
-
-    IMG_FILE = ".\data\small\sim1_full.png"
+    IMG_FILE = "why-is-the-sky-blue_1.jpg"
     # img = skimage.io.imread(IMG_FILE)[np.newaxis, :]
     img = skimage.io.imread(IMG_FILE)
     # img_proced = imagenet_utils.preprocess_input(img)
 
-    deep_hist =  deep_hist_loss(img, 3, 256, [0.0, 255.0], 0.01)
-
+    deep_hist =  deep_hist_loss(img, 3, 256, [-1.0, 255.0], 0.01)
+    # print(deep_hist[2])
     ori_hist = sk_hist_3ch(img, 3)
 
     plot_3ch_hist(deep_hist, 256)

@@ -3,10 +3,10 @@ import numpy as np
 from skimage.color import label2rgb
 
 def filterByArea(image, area):
-    cc = cv2.connectedComponentsWithStats(edges, connectivity=8, stats=cv2.CC_STAT_AREA)
+    cc = cv2.connectedComponentsWithStats(image, connectivity=8, stats=cv2.CC_STAT_AREA)
     badIdx = np.where(cc[2][:, 4] < area)
     for idx in badIdx[0]:
-        edges[np.where(cc[1]==idx)] = 0
+        image[np.where(cc[1]==idx)] = 0
 
 def connectLines(img, numIter, kernelSize):
     # for i in range(numIter):

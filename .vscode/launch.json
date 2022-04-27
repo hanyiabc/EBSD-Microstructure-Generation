@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["-s", "./data/small/sim1.png", "-o", "./data/result/", "-n", "6"]
+            "args": ["-s", "./data/small/sim1_full.png", "-o", "./data/result/", "-n", "6"]
         }
     ]
 }

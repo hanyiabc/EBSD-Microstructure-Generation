@@ -3,6 +3,7 @@ import numpy as np
 from skimage.color import label2rgb
 import random
 import matplotlib.pyplot as plt
+import matplotlib
 from skimage.exposure import match_histograms
 import argparse
 import os
@@ -100,15 +101,16 @@ def visualizeDetectedGrains(cc):
     pcolor = label2rgb(labels, colors = colors)
     return pcolor.astype(np.uint8)
 
-def cleanUpGrains(cc, img):
+def cleanUpGrains(cc, img, mask):
     labels = cc[1]
     
     pcolor = label2rgb(labels, image=img, bg_label=0, kind='avg')
     label3Ch = np.stack([labels]*3, axis=2)
     
     pcolor[label3Ch==0] = img[label3Ch==0]
-
-    return pcolor.astype(np.uint8)
+    pcolor = pcolor.astype(np.uint8)
+    
+    return cv2.bitwise_and(mask, pcolor) 
 
 """
 img: a inverted image for connected components
@@ -116,9 +118,9 @@ img: a inverted image for connected components
 def grainSizeHist(img, minn, maxx, nbins):
   
     cc = cv2.connectedComponentsWithStats(img, connectivity=4, stats=cv2.CC_STAT_AREA)
-    pcolor = visualizeDetectedGrains(cc)
-    cv2.imshow("Segmentation", pcolor)
-    cv2.imwrite("seg.png", pcolor)
+    # pcolor = visualizeDetectedGrains(cc)
+    # cv2.imshow("Segmentation", pcolor)
+    # cv2.imwrite("seg.png", pcolor)
     area = cc[2][:, 4]
     area = area[area!=np.max(area)]
     hist = np.histogram(area, bins=nbins, range=(minn, maxx))
@@ -133,14 +135,23 @@ def grainSizeHist(img, minn, maxx, nbins):
 def histmatch(source,target):
     result = match_histograms(source, target, multichannel=True)
     
-def segmentation(filename, origFileName):
+def plotHist(area, edges, left):
+    if left is True:
+        plt.bar(edges - 21, area, width=40, align='center', color='r')
+    else:
+        plt.bar(edges + 21, area, width=40, align='center', color='b')
+    plt.ylim(0, 0.15)
+
+def segmentation(filename, get_mid_res=False):
+    print("Working on: ", filename)
+    mid_res_imgs = []
     regenImg = cv2.imread(filename)
-    origImg = cv2.imread(origFileName)
-    result = histmatch(regenImg, origImg)
+    mid_res_imgs.append(regenImg)
+    # origImg = cv2.imread(origFileName)
+    # result = histmatch(regenImg, origImg)
     
     # gau_blurred = cv2.GaussianBlur(regenImg, (3, 3), 1.5)
     # sharpened = cv2.addWeighted(regenImg, 1.5, gau_blurred, -0.5, 0)
-    # TODO: Add histogram matching
     processed = regenImg
     # gray = cv2.cvtColor(regenImg, cv2.COLOR_BGR2GRAY)
     scharrx = cv2.Scharr(processed, cv2.CV_32F, 1, 0)
@@ -151,30 +162,40 @@ def segmentation(filename, origFileName):
     magGray = np.max(mag, axis=2)
     # magGray = np.mean(mag, axis=2)
     rescaledMagGray = cv2.convertScaleAbs(magGray)
-
+    mid_res_imgs.append(rescaledMagGray)
     __, threshImg = cv2.threshold(rescaledMagGray, 254, 255, cv2.THRESH_BINARY)
+
     filterByArea(threshImg, 200)
     invThresh = cv2.bitwise_not(threshImg)
     filterByArea(invThresh, 10)
     threshImg = cv2.bitwise_not(invThresh)
+    mid_res_imgs.append(threshImg)
+
 
     skel = cv2.ximgproc.thinning(threshImg)
     filterByArea(skel, 200)
 
-    deBranched = deBranch(skel)
-    mergeSmallArea(processed, skel, 300, 50)
 
-    inv = cv2.bitwise_not(deBranched)
-    skel3Ch = cv2.cvtColor(deBranched, cv2.COLOR_GRAY2BGR)
+    deBranched = deBranch(skel)
+    merged = mergeSmallArea(processed, deBranched, 300, 50)
+    mid_res_imgs.append(merged)
+    
+    inv = cv2.bitwise_not(merged)
+    skel3Ch = cv2.cvtColor(merged, cv2.COLOR_GRAY2BGR)
 
     vis = cv2.bitwise_or(skel3Ch, regenImg)
     inv3ch = cv2.cvtColor(inv, cv2.COLOR_GRAY2BGR)
-    boundary = cv2.bitwise_and(inv3ch, regenImg)
+    # boundary = cv2.bitwise_and(inv3ch, regenImg)
 
     cc = cv2.connectedComponentsWithStats(inv, connectivity=4, stats=cv2.CC_STAT_AREA)
-    cleanedGrains = cleanUpGrains(cc, regenImg)
-    return cleanedGrains
-    cv2.imwrite("cleaned.png", cleanedGrains)
+    mid_res_imgs.append(vis)
+    cleanedGrains = cleanUpGrains(cc, regenImg, inv3ch)
+    (__, area, edges) = grainSizeHist(inv, 0, 4000, 40)
+    hist = (area, edges)
+    if get_mid_res is False:
+        return cleanedGrains, hist
+    return cleanedGrains, mid_res_imgs, hist
+    # cv2.imwrite("cleaned.png", cleanedGrains)
 
     # cv2.imshow("Processed", processed)
     # cv2.imshow("Magnitude", rescaledMag)
@@ -192,29 +213,26 @@ def segmentation(filename, origFileName):
     # cv2.imwrite("inv.png", inv)
     # cv2.imwrite("vis.png", vis)
     # cv2.imwrite("boundary.png", boundary)
-    (count, area, edges) = grainSizeHist(inv, 0, 4000, 40)
+  
     # cv2.waitKey(0)
-    plt.figure()
-    plt.bar(edges, area, width=80, align='edge')
-    plt.ylim(0, 0.15)
-    plt.show()
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Texture Synthesis witn CNN.')
     parser.add_argument('--generation_input', '-i', required=True, type=str, nargs='+', help='Path(s) to the generated image.')
-    parser.add_argument('--source_dir', '-d', required=True, type=str, help='Path(s) to the directory of the source images.')
+    parser.add_argument('--fig_dir', '-f', required=False, default=None, type=str, help='Figure save path')
     parser.add_argument('--output_dir', '-o', required=True, type=str, help='Output path.')
-    args = parser.parse_args()
 
+    args = parser.parse_args()
     generation_input = args.generation_input
     output_dir = args.output_dir
-    source_dir = args.source_dir
-    # cleaned = segmentation(imgPath, sourcePath)
+    fig_dir = args.fig_dir
+    matplotlib.use('Agg')
     for imgPath in generation_input:
         baseName = os.path.basename(imgPath)
         savePath = os.path.join(output_dir, baseName)
-        sourcePath = os.path.join(source_dir, baseName)
-        cleaned = segmentation(imgPath, sourcePath)
+        cleaned, fig = segmentation(imgPath)
         cv2.imwrite(savePath, cleaned)
-        
+        if fig_dir is not None:
+            figname = os.path.join(fig_dir, os.path.splitext(baseName)[0] + '.eps')
+            fig.savefig(figname)
